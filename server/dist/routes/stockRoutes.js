@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const stockController_1 = require("../controllers/stockController");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticateJWT);
+router.get('/stock', stockController_1.getStockLevels);
+router.post('/stock/adjust', stockController_1.adjustStock);
+router.post('/stock/transfer', stockController_1.transferStock);
+router.get('/transactions', stockController_1.getTransactions);
+exports.default = router;

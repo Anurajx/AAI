@@ -1,0 +1,269 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  AIRPORT_MGR
+  STAFF
+  REQUESTER
+  AUDITOR
+}
+
+enum TransactionType {
+  IN
+  OUT
+  TRANSFER
+  ADJUSTMENT
+  DAMAGED
+  RETURNED
+}
+
+enum POStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ORDERED
+  PARTIALLY_RECEIVED
+  RECEIVED
+}
+
+enum ReqStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FULFILLED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  employeeId   String    @unique
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(REQUESTER)
+  airportId    String?   // Nullable for SUPER_ADMIN / AUDITOR
+  airport      Airport?  @relation(fields: [airportId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  transactions      StockTransaction[]
+  createdPOs        PurchaseOrder[]     @relation("POCreator")
+  approvedPOs       PurchaseOrder[]     @relation("POApprover")
+  requestedReqs     Requisition[]       @relation("ReqRequester")
+  approvedReqs      Requisition[]       @relation("ReqApprover")
+  auditLogs         AuditLog[]
+}
+
+model Airport {
+  id        String      @id @default(uuid())
+  code      String      @unique // e.g. "DEL", "BOM", "BLR"
+  name      String      // e.g. "Indira Gandhi International Airport"
+  city      String
+  region    String      // e.g. "Northern", "Western", "Southern"
+  
+  // Relations
+  warehouses   Warehouse[]
+  users        User[]
+  requisitions Requisition[]
+}
+
+model Warehouse {
+  id          String      @id @default(uuid())
+  name        String      // e.g. "Terminal 2 Ground Store"
+  description String?
+  airportId   String
+  airport     Airport     @relation(fields: [airportId], references: [id])
+  
+  // Relations
+  stockLevels       StockLevel[]
+  transactions      StockTransaction[] @relation("SourceWarehouse")
+  destTransactions  StockTransaction[] @relation("DestWarehouse")
+  maintenanceRecords MaintenanceRecord[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique // Spare Parts, Ground Support Equipment, etc.
+  description String?
+  
+  // Relations
+  items       Item[]
+}
+
+model Item {
+  id               String      @id @default(uuid())
+  name             String
+  skuCode          String      @unique // e.g. "AAI-SP-RUNWAY-001"
+  categoryId       String
+  category         Category    @relation(fields: [categoryId], references: [id])
+  unitOfMeasure    String      // e.g. "PCS", "SETS", "METERS"
+  reorderThreshold Int
+  reorderQuantity  Int
+  unitCost         Float
+  supplierId       String
+  supplier         Supplier    @relation(fields: [supplierId], references: [id])
+  barcodeValue     String      @unique
+  imageUrl         String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // Relations
+  stockLevels        StockLevel[]
+  transactions       StockTransaction[]
+  poItems            PurchaseOrderItem[]
+  reqItems           RequisitionItem[]
+  maintenanceRecords MaintenanceRecord[]
+}
+
+model StockLevel {
+  id                String    @id @default(uuid())
+  itemId            String
+  item              Item      @relation(fields: [itemId], references: [id])
+  warehouseId       String
+  warehouse         Warehouse @relation(fields: [warehouseId], references: [id])
+  quantity          Int       @default(0)
+  reservedQuantity  Int       @default(0)
+  availableQuantity Int       @default(0) // quantity - reservedQuantity
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([itemId, warehouseId])
+}
+
+model StockTransaction {
+  id                 String          @id @default(uuid())
+  transactionType    TransactionType
+  itemId             String
+  item               Item            @relation(fields: [itemId], references: [id])
+  warehouseId        String          // Source or current warehouse
+  warehouse          Warehouse       @relation("SourceWarehouse", fields: [warehouseId], references: [id])
+  targetWarehouseId  String?         // Only for TRANSFER
+  targetWarehouse    Warehouse?      @relation("DestWarehouse", fields: [targetWarehouseId], references: [id])
+  quantity           Int
+  referenceNumber    String?         // PO number or Requisition number
+  performedByUserId  String
+  performedByUser    User            @relation(fields: [performedByUserId], references: [id])
+  reason             String?         // e.g., "damaged", "lost", "recount"
+  timestamp          DateTime        @default(now())
+}
+
+model Supplier {
+  id            String   @id @default(uuid())
+  name          String
+  contactPerson String?
+  email         String?
+  phone         String?
+  address       String?
+  gstin         String   @unique
+  rating        Float    @default(5.0)
+  leadTimeDays  Int      @default(7)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  items  Item[]
+  pos    PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id                   String              @id @default(uuid())
+  poNumber             String              @unique // e.g. "PO-2026-0001"
+  supplierId           String
+  supplier             Supplier            @relation(fields: [supplierId], references: [id])
+  status               POStatus            @default(DRAFT)
+  totalCost            Float               @default(0.0)
+  expectedDeliveryDate DateTime
+  createdByUserId      String
+  createdByUser        User                @relation("POCreator", fields: [createdByUserId], references: [id])
+  approvedByUserId     String?
+  approvedByUser       User?               @relation("POApprover", fields: [approvedByUserId], references: [id])
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  
+  // Relations
+  items                PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  itemId          String
+  item            Item          @relation(fields: [itemId], references: [id])
+  quantityOrdered Int
+  quantityReceived Int          @default(0)
+  unitCost        Float
+}
+
+model Requisition {
+  id                  String            @id @default(uuid())
+  reqNumber           String            @unique // e.g. "REQ-2026-0001"
+  requestingDepartment String            // e.g. "CNS", "Operations", "ATC", "Fire"
+  airportId           String
+  airport             Airport           @relation(fields: [airportId], references: [id])
+  requestedByUserId   String
+  requestedByUser     User              @relation("ReqRequester", fields: [requestedByUserId], references: [id])
+  approvedByUserId    String?
+  approvedByUser      User?             @relation("ReqApprover", fields: [approvedByUserId], references: [id])
+  status              ReqStatus         @default(PENDING)
+  comments            String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  // Relations
+  items               RequisitionItem[]
+}
+
+model RequisitionItem {
+  id                String      @id @default(uuid())
+  requisitionId     String
+  requisition       Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  itemId            String
+  item              Item        @relation(fields: [itemId], references: [id])
+  quantityRequested Int
+  quantityFulfilled Int         @default(0)
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String   // e.g. "CREATE_ITEM", "UPDATE_STOCK", "APPROVE_PO"
+  entityName  String   // e.g. "Item", "StockLevel", "PurchaseOrder"
+  entityId    String
+  beforeState String?  // JSON string
+  afterState  String?  // JSON string
+  timestamp   DateTime @default(now())
+}
+
+model MaintenanceRecord {
+  id              String    @id @default(uuid())
+  itemId          String
+  item            Item      @relation(fields: [itemId], references: [id])
+  warehouseId     String
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+  status          String    // e.g., "SCHEDULED", "IN_PROGRESS", "COMPLETED"
+  lastServiceDate DateTime?
+  nextServiceDue  DateTime
+  description     String
+  performedBy     String?
+  cost            Float     @default(0.0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // e.g., "LOW_STOCK", "REQUISITION_APPROVAL", "PO_STATUS"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

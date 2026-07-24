@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    @apply bg-aai-dark text-aai-foreground font-sans antialiased;
+    line-height: 1.6;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-aai-blue;
+  }
+
+  ::selection {
+    @apply bg-aai-blue/20 text-aai-foreground;
+  }
+}
+
+@layer components {
+  .gov-skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100]
+      focus:px-4 focus:py-2 focus:bg-white focus:text-aai-navy focus:border-2
+      focus:border-aai-blue focus:rounded focus:font-semibold focus:text-sm;
+  }
+
+  .gov-card {
+    @apply bg-aai-card border border-aai-border rounded shadow-gov;
+  }
+
+  .gov-page-title {
+    @apply text-2xl font-semibold text-aai-foreground tracking-tight;
+  }
+
+  .gov-page-subtitle {
+    @apply text-sm text-aai-muted mt-1;
+  }
+
+  .gov-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-aai-blue
+      hover:bg-aai-blueHover text-white text-sm font-semibold rounded
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+      focus-visible:outline-aai-blue disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .gov-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-aai-card
+      hover:bg-aai-surface border border-aai-border text-aai-foreground text-sm font-semibold
+      rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+      focus-visible:outline-aai-blue;
+  }
+
+  .gov-input {
+    @apply w-full bg-white border border-aai-border rounded px-3 py-2.5 text-sm
+      text-aai-foreground placeholder:text-aai-muted/70
+      focus:outline-none focus:border-aai-blue focus:ring-1 focus:ring-aai-blue/30;
+  }
+
+  .gov-table {
+    @apply w-full text-sm text-left;
+  }
+
+  .gov-table thead {
+    @apply bg-aai-surface border-b-2 border-aai-border;
+  }
+
+  .gov-table th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide text-aai-muted;
+  }
+
+  .gov-table td {
+    @apply px-4 py-3 border-b border-aai-border text-aai-foreground;
+  }
+
+  .gov-table tbody tr:hover {
+    @apply bg-aai-surface/50;
+  }
+
+  .gov-badge {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded;
+  }
+
+  .gov-kpi {
+    @apply gov-card p-5;
+  }
+
+  .gov-kpi-label {
+    @apply text-xs text-aai-muted font-medium uppercase tracking-wide;
+  }
+
+  .gov-kpi-value {
+    @apply text-2xl font-semibold text-aai-foreground mt-1 tabular-nums;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e8ecf1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a0aec0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}

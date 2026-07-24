@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const inventoryController_1 = require("../controllers/inventoryController");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticateJWT);
+router.get('/airports', inventoryController_1.getAirports);
+router.get('/warehouses', inventoryController_1.getWarehouses);
+router.get('/categories', inventoryController_1.getCategories);
+router.get('/suppliers', inventoryController_1.getSuppliers);
+router.get('/items', inventoryController_1.getItems);
+router.get('/items/:id', inventoryController_1.getItemDetail);
+router.post('/items', inventoryController_1.createItem);
+router.put('/items/:id', inventoryController_1.updateItem);
+exports.default = router;
