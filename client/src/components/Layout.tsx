@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import { useToastStore } from '../store/toastStore';
-import { useNotificationStore } from '../store/notificationStore';
-import { api } from '../lib/api';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useAuthStore } from "../store/authStore";
+import { useToastStore } from "../store/toastStore";
+import { useNotificationStore } from "../store/notificationStore";
+import { api } from "../lib/api";
 import {
   LayoutDashboard,
   Boxes,
@@ -16,13 +16,19 @@ import {
   X,
   AlertTriangle,
   ClipboardList,
-  ExternalLink
-} from 'lucide-react';
+  ExternalLink,
+} from "lucide-react";
 
 export default function Layout() {
   const { user, logout } = useAuthStore();
   const { toasts, removeToast } = useToastStore();
-  const { notifications, unreadCount, setNotifications, markRead, markAllRead } = useNotificationStore();
+  const {
+    notifications,
+    unreadCount,
+    setNotifications,
+    markRead,
+    markAllRead,
+  } = useNotificationStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,10 +38,10 @@ export default function Layout() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await api.get('/notifications');
+        const response = await api.get("/notifications");
         setNotifications(response.data.data);
       } catch {
-        console.error('Failed to load notifications');
+        console.error("Failed to load notifications");
       }
     };
     if (user) {
@@ -47,12 +53,12 @@ export default function Layout() {
 
   const handleLogout = async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post("/auth/logout");
     } catch {
       // Proceed with local logout
     }
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleMarkAsRead = async (id: string) => {
@@ -66,7 +72,7 @@ export default function Layout() {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await api.post('/notifications/read-all');
+      await api.post("/notifications/read-all");
       markAllRead();
     } catch (err) {
       console.error(err);
@@ -74,16 +80,48 @@ export default function Layout() {
   };
 
   const navLinks = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'AIRPORT_MGR', 'STAFF', 'REQUESTER', 'AUDITOR'] },
-    { name: 'Inventory Ledger', path: '/inventory', icon: Boxes, roles: ['SUPER_ADMIN', 'AIRPORT_MGR', 'STAFF', 'REQUESTER', 'AUDITOR'] },
-    { name: 'Procurement', path: '/purchase-orders', icon: ShoppingCart, roles: ['SUPER_ADMIN', 'AIRPORT_MGR', 'STAFF', 'AUDITOR'] },
-    { name: 'Requisitions', path: '/requisitions', icon: ClipboardList, roles: ['SUPER_ADMIN', 'AIRPORT_MGR', 'STAFF', 'REQUESTER', 'AUDITOR'] },
-    { name: 'Audit Reports', path: '/reports', icon: FileSpreadsheet, roles: ['SUPER_ADMIN', 'AIRPORT_MGR', 'STAFF', 'AUDITOR'] },
-    { name: 'Administration', path: '/admin', icon: Users, roles: ['SUPER_ADMIN', 'AUDITOR'] },
+    {
+      name: "Dashboard",
+      path: "/",
+      icon: LayoutDashboard,
+      roles: ["SUPER_ADMIN", "AIRPORT_MGR", "STAFF", "REQUESTER", "AUDITOR"],
+    },
+    {
+      name: "Inventory Ledger",
+      path: "/inventory",
+      icon: Boxes,
+      roles: ["SUPER_ADMIN", "AIRPORT_MGR", "STAFF", "REQUESTER", "AUDITOR"],
+    },
+    {
+      name: "Procurement",
+      path: "/purchase-orders",
+      icon: ShoppingCart,
+      roles: ["SUPER_ADMIN", "AIRPORT_MGR", "STAFF", "AUDITOR"],
+    },
+    {
+      name: "Requisitions",
+      path: "/requisitions",
+      icon: ClipboardList,
+      roles: ["SUPER_ADMIN", "AIRPORT_MGR", "STAFF", "REQUESTER", "AUDITOR"],
+    },
+    {
+      name: "Audit Reports",
+      path: "/reports",
+      icon: FileSpreadsheet,
+      roles: ["SUPER_ADMIN", "AIRPORT_MGR", "STAFF", "AUDITOR"],
+    },
+    {
+      name: "Administration",
+      path: "/admin",
+      icon: Users,
+      roles: ["SUPER_ADMIN", "AUDITOR"],
+    },
   ];
 
   const activeLink = navLinks.find((link) => link.path === location.pathname);
-  const filteredLinks = navLinks.filter((link) => link.roles.includes(user?.role || ''));
+  const filteredLinks = navLinks.filter((link) =>
+    link.roles.includes(user?.role || ""),
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-aai-dark">
@@ -96,8 +134,12 @@ export default function Layout() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between py-1.5 text-xs border-b border-white/10">
             <div className="flex items-center gap-3">
-              <span className="font-medium opacity-90">Government of India</span>
-              <span className="opacity-40" aria-hidden="true">|</span>
+              <span className="font-medium opacity-90">
+                Government of India
+              </span>
+              <span className="opacity-40" aria-hidden="true">
+                |
+              </span>
               <span className="opacity-80">Airport Authority of India</span>
             </div>
             <a
@@ -136,7 +178,7 @@ export default function Layout() {
                   type="button"
                   onClick={() => setIsNotifOpen(!isNotifOpen)}
                   className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded relative"
-                  aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+                  aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
                   aria-expanded={isNotifOpen}
                   aria-haspopup="true"
                 >
@@ -158,7 +200,9 @@ export default function Layout() {
                     aria-label="Notifications"
                   >
                     <div className="p-3 border-b border-aai-border flex justify-between items-center bg-aai-surface">
-                      <span className="font-semibold text-sm text-aai-foreground">Notifications</span>
+                      <span className="font-semibold text-sm text-aai-foreground">
+                        Notifications
+                      </span>
                       {unreadCount > 0 && (
                         <button
                           type="button"
@@ -169,7 +213,10 @@ export default function Layout() {
                         </button>
                       )}
                     </div>
-                    <ul className="max-h-64 overflow-y-auto divide-y divide-aai-border" role="list">
+                    <ul
+                      className="max-h-64 overflow-y-auto divide-y divide-aai-border"
+                      role="list"
+                    >
                       {notifications.length === 0 ? (
                         <li className="p-6 text-center text-xs text-aai-muted">
                           No recent notifications.
@@ -178,10 +225,12 @@ export default function Layout() {
                         notifications.map((notif) => (
                           <li
                             key={notif.id}
-                            className={`p-3 text-xs ${notif.isRead ? 'opacity-70' : 'bg-aai-blue/5'}`}
+                            className={`p-3 text-xs ${notif.isRead ? "opacity-70" : "bg-aai-blue/5"}`}
                           >
                             <div className="flex justify-between items-start gap-2">
-                              <span className="font-semibold text-aai-foreground">{notif.title}</span>
+                              <span className="font-semibold text-aai-foreground">
+                                {notif.title}
+                              </span>
                               {!notif.isRead && (
                                 <button
                                   type="button"
@@ -192,16 +241,22 @@ export default function Layout() {
                                 </button>
                               )}
                             </div>
-                            <p className="text-aai-muted mt-1 leading-relaxed">{notif.message}</p>
+                            <p className="text-aai-muted mt-1 leading-relaxed">
+                              {notif.message}
+                            </p>
                             <time
                               className="text-[10px] text-aai-muted block mt-1.5"
                               dateTime={notif.createdAt}
                             >
-                              {new Date(notif.createdAt).toLocaleDateString()} at{' '}
-                              {new Date(notif.createdAt).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
+                              {new Date(notif.createdAt).toLocaleDateString()}{" "}
+                              at{" "}
+                              {new Date(notif.createdAt).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
                             </time>
                           </li>
                         ))
@@ -218,11 +273,23 @@ export default function Layout() {
                 >
                   {user?.name.slice(0, 2).toUpperCase()}
                 </div>
-                <div className="text-left hidden lg:block">
-                  <p className="text-xs font-semibold text-white leading-tight">{user?.name}</p>
-                  <p className="text-[10px] text-white/70 mt-0.5">
-                    {user?.airport ? `${user.airport.name} (${user.airport.code})` : 'Central Headquarters'}
+                <div className="text-left hidden sm:block">
+                  <p className="text-xs font-semibold text-white leading-tight">
+                    {user?.name}
                   </p>
+                  <p className="text-[10px] text-white/70 mt-0.5">
+                    {user?.airport
+                      ? `${user.airport.name} (${user.airport.code})`
+                      : "Central Headquarters"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="mt-1 inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold text-white/80 hover:bg-white/10 hover:text-white"
+                  >
+                    <LogOut className="h-3 w-3" aria-hidden="true" />
+                    Sign out
+                  </button>
                 </div>
               </div>
 
@@ -255,10 +322,10 @@ export default function Layout() {
                       to={link.path}
                       className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 ${
                         isActive
-                          ? 'border-white text-white bg-white/5'
-                          : 'border-transparent text-white/75 hover:text-white hover:bg-white/5'
+                          ? "border-white text-white bg-white/5"
+                          : "border-transparent text-white/75 hover:text-white hover:bg-white/5"
                       }`}
-                      aria-current={isActive ? 'page' : undefined}
+                      aria-current={isActive ? "page" : undefined}
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
                       {link.name}
@@ -283,21 +350,24 @@ export default function Layout() {
             key={toast.id}
             role="alert"
             onClick={() => removeToast(toast.id)}
-            onKeyDown={(e) => e.key === 'Enter' && removeToast(toast.id)}
+            onKeyDown={(e) => e.key === "Enter" && removeToast(toast.id)}
             tabIndex={0}
             className={`p-4 rounded border flex justify-between items-center cursor-pointer ${
-              toast.type === 'success'
-                ? 'bg-white border-aai-success/40 text-aai-success'
-                : toast.type === 'error'
-                  ? 'bg-white border-aai-error/40 text-aai-error'
-                  : toast.type === 'warning'
-                    ? 'bg-white border-aai-accent/40 text-aai-accent'
-                    : 'bg-white border-aai-border text-aai-foreground'
+              toast.type === "success"
+                ? "bg-white border-aai-success/40 text-aai-success"
+                : toast.type === "error"
+                  ? "bg-white border-aai-error/40 text-aai-error"
+                  : toast.type === "warning"
+                    ? "bg-white border-aai-accent/40 text-aai-accent"
+                    : "bg-white border-aai-border text-aai-foreground"
             } shadow-gov`}
           >
             <div className="flex items-center gap-2">
-              {toast.type === 'warning' && (
-                <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              {toast.type === "warning" && (
+                <AlertTriangle
+                  className="h-4 w-4 flex-shrink-0"
+                  aria-hidden="true"
+                />
               )}
               <span className="text-sm font-medium">{toast.message}</span>
             </div>
@@ -317,39 +387,11 @@ export default function Layout() {
       </div>
 
       <div className="flex flex-1 max-w-[1600px] mx-auto w-full">
-        {/* Sidebar — user context (desktop) */}
-        <aside
-          className="hidden lg:flex flex-col w-56 flex-shrink-0 border-r border-aai-border bg-white p-4"
-          aria-label="User information"
-        >
-          <div className="gov-card p-4 mb-4">
-            <p className="text-xs text-aai-muted font-medium uppercase tracking-wide">Signed in as</p>
-            <p className="font-semibold text-sm text-aai-foreground mt-1">{user?.name}</p>
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <span className="gov-badge bg-aai-blue/10 text-aai-blue border border-aai-blue/20">
-                {user?.role?.replace(/_/g, ' ')}
-              </span>
-              <span className="text-xs text-aai-muted">
-                {user?.airport ? user.airport.code : 'Global'}
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2.5 text-left rounded text-sm font-medium text-aai-error hover:bg-red-50 border border-transparent hover:border-aai-error/20"
-          >
-            <LogOut className="h-4 w-4" aria-hidden="true" />
-            Sign Out
-          </button>
-        </aside>
-
         {/* Main content */}
         <div className="flex flex-col flex-1 min-w-0">
           <div className="px-4 sm:px-6 py-3 bg-white border-b border-aai-border lg:hidden">
             <h2 className="text-sm font-semibold text-aai-foreground">
-              {activeLink ? activeLink.name : 'AAI Inventory Management'}
+              {activeLink ? activeLink.name : "AAI Inventory Management"}
             </h2>
           </div>
 
@@ -357,9 +399,13 @@ export default function Layout() {
             <Outlet />
           </main>
 
-          <footer className="px-4 sm:px-6 py-4 border-t border-aai-border bg-white text-xs text-aai-muted" role="contentinfo">
+          <footer
+            className="px-4 sm:px-6 py-4 border-t border-aai-border bg-white text-xs text-aai-muted"
+            role="contentinfo"
+          >
             <p>
-              &copy; {new Date().getFullYear()} Airport Authority of India. All rights reserved.
+              &copy; {new Date().getFullYear()} Airport Authority of India. All
+              rights reserved.
             </p>
             <p className="mt-1">
               For technical assistance, contact your regional IT helpdesk.
@@ -370,7 +416,12 @@ export default function Layout() {
 
       {/* Mobile navigation drawer */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+        <div
+          className="fixed inset-0 z-40 flex md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
+        >
           <button
             type="button"
             className="fixed inset-0 bg-black/40"
@@ -379,7 +430,9 @@ export default function Layout() {
           />
           <div className="relative flex flex-col w-72 max-w-[85vw] bg-white border-r border-aai-border h-full z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-aai-border bg-aai-header">
-              <span className="font-semibold text-white text-sm">Navigation</span>
+              <span className="font-semibold text-white text-sm">
+                Navigation
+              </span>
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -401,10 +454,10 @@ export default function Layout() {
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 text-sm font-medium ${
                           isActive
-                            ? 'bg-aai-blue/10 text-aai-blue border-l-4 border-aai-blue'
-                            : 'text-aai-foreground hover:bg-aai-surface'
+                            ? "bg-aai-blue/10 text-aai-blue border-l-4 border-aai-blue"
+                            : "text-aai-foreground hover:bg-aai-surface"
                         }`}
-                        aria-current={isActive ? 'page' : undefined}
+                        aria-current={isActive ? "page" : undefined}
                       >
                         <Icon className="h-4 w-4" aria-hidden="true" />
                         {link.name}
