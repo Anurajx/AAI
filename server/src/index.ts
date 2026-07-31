@@ -16,12 +16,42 @@ import { prisma } from "./db";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT || 5000);
+
+const parseAllowedOrigins = (rawOrigins?: string) =>
+  (rawOrigins || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:3000",
+  "https://aai-client.vercel.app",
+].filter(Boolean) as string[];
+
+const corsOrigins = [
+  ...new Set([
+    ...allowedOrigins,
+    ...parseAllowedOrigins(process.env.CORS_ORIGINS),
+  ]),
+];
 
 // Middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin(origin, callback) {
+      if (!origin || corsOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
     credentials: true,
   }),
 );
@@ -84,12 +114,29 @@ async function startServer() {
     process.exit(1);
   }
 
-  app.listen(PORT, () => {
-    console.log(`[AeroStock Server] Running on http://localhost:${PORT}`);
-    console.log(
-      `[AeroStock Server] API v1 base: http://localhost:${PORT}/api/v1`,
-    );
-  });
+  const startListening = (port: number, attempt = 0) => {
+    const server = app.listen(port, "0.0.0.0", () => {
+      console.log(`[AeroStock Server] Running on http://localhost:${port}`);
+      console.log(
+        `[AeroStock Server] API v1 base: http://localhost:${port}/api/v1`,
+      );
+    });
+
+    server.on("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE" && attempt < 10) {
+        const nextPort = port + 1;
+        console.warn(
+          `[AeroStock Server] Port ${port} is busy, trying ${nextPort}...`,
+        );
+        server.close(() => startListening(nextPort, attempt + 1));
+      } else {
+        console.error("[AeroStock Server] Failed to start server", error);
+        process.exit(1);
+      }
+    });
+  };
+
+  startListening(PORT);
 }
 
 startServer();
