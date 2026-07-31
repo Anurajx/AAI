@@ -45,7 +45,27 @@ const corsOrigins = [
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || corsOrigins.includes(origin)) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const isAllowed = corsOrigins.some((allowedOrigin) => {
+        if (!allowedOrigin) return false;
+        if (allowedOrigin === "*") return true;
+        return allowedOrigin === origin;
+      });
+
+      if (isAllowed) {
+        callback(null, true);
+        return;
+      }
+
+      if (
+        origin.startsWith("http://127.0.0.1") ||
+        origin.startsWith("http://localhost") ||
+        origin.startsWith("https://")
+      ) {
         callback(null, true);
         return;
       }
