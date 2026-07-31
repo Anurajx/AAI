@@ -1,15 +1,17 @@
-import axios from 'axios';
-import { useAuthStore } from '../store/authStore';
+import axios from "axios";
+import { useAuthStore } from "../store/authStore";
+
+const API_BASE_URL = "https://aai-3.onrender.com/api/v1";
 
 export const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 const isAuthEndpoint = (url?: string) =>
-  !!url && (url.includes('/auth/login') || url.includes('/auth/refresh'));
+  !!url && (url.includes("/auth/login") || url.includes("/auth/refresh"));
 
 // Request Interceptor: Attach Access Token to every outgoing request
 api.interceptors.request.use(
@@ -22,7 +24,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response Interceptor: Handle automatic token refreshing on 401 responses
@@ -75,11 +77,13 @@ api.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post('/api/v1/auth/refresh', { refreshToken });
+        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refreshToken,
+        });
         const { accessToken } = response.data.data;
 
         useAuthStore.getState().setAccessToken(accessToken);
-        
+
         processQueue(null, accessToken);
         isRefreshing = false;
 
@@ -94,5 +98,5 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
