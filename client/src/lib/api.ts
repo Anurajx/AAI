@@ -1,17 +1,23 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 
-// Safely read the Vite environment variable
-const configuredApiBase =
-  (
-    import.meta as ImportMeta & {
-      env: {
-        VITE_API_URL?: string;
-      };
-    }
-  ).env.VITE_API_URL ?? "https://aai-3.onrender.com/api/v1";
+// Resolve the API base URL per environment.
+// Local development uses the local backend, while production builds use the deployed backend.
+const env = (
+  import.meta as ImportMeta & {
+    env: {
+      VITE_API_URL?: string;
+      DEV?: boolean;
+    };
+  }
+).env;
 
-const API_BASE_URL = configuredApiBase.trim().replace(/\/$/, "");
+const configuredApiBase = env.VITE_API_URL?.trim();
+const defaultApiBase = env.DEV
+  ? "http://localhost:5000/api/v1"
+  : "https://aai-3.onrender.com/api/v1";
+
+const API_BASE_URL = (configuredApiBase || defaultApiBase).replace(/\/$/, "");
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
