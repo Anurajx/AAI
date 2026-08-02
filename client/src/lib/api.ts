@@ -1,23 +1,32 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 
-// Resolve the API base URL per environment.
+// Resolve the API base URL based on the current environment.
 // Local development uses the local backend, while production builds use the deployed backend.
 const env = (
   import.meta as ImportMeta & {
     env: {
       VITE_API_URL?: string;
-      DEV?: boolean;
     };
   }
 ).env;
 
 const configuredApiBase = env.VITE_API_URL?.trim();
-const defaultApiBase = env.DEV
-  ? "http://localhost:5000/api/v1"
-  : "https://aai-3.onrender.com/api/v1";
+const isLocalHost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
 
-const API_BASE_URL = (configuredApiBase || defaultApiBase).replace(/\/$/, "");
+const localApiBase = "http://localhost:5000/api/v1";
+const productionApiBase = "https://aai-3.onrender.com/api/v1";
+const resolvedApiBase =
+  configuredApiBase && !configuredApiBase.includes("localhost")
+    ? configuredApiBase
+    : isLocalHost
+      ? localApiBase
+      : productionApiBase;
+
+const API_BASE_URL = resolvedApiBase.replace(/\/$/, "");
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
