@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/authStore';
-import { useToastStore } from '../store/toastStore';
-import { api } from '../lib/api';
+import React, { useState, useEffect } from "react";
+import { useAuthStore } from "../store/authStore";
+import { useToastStore } from "../store/toastStore";
+import { api } from "../lib/api";
 import {
   FileText,
   Sheet,
@@ -11,8 +11,8 @@ import {
   AlertTriangle,
   FolderOpen,
   RefreshCw,
-  TrendingDown
-} from 'lucide-react';
+  TrendingDown,
+} from "lucide-react";
 
 export default function Reports() {
   const { user } = useAuthStore();
@@ -27,16 +27,16 @@ export default function Reports() {
     setIsLoading(true);
     try {
       const [valRes, velRes, reoRes] = await Promise.all([
-        api.get('/reports/valuation'),
-        api.get('/reports/velocity'),
-        api.get('/reports/reorder')
+        api.get("/reports/valuation"),
+        api.get("/reports/velocity"),
+        api.get("/reports/reorder"),
       ]);
 
       setValuationData(valRes.data.data);
       setVelocityData(velRes.data.data);
       setReorderData(reoRes.data.data);
     } catch (err) {
-      addToast('Failed to load reports dashboards.', 'error');
+      addToast("Failed to load reports dashboards.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -46,15 +46,42 @@ export default function Reports() {
     fetchReports();
   }, []);
 
+  const downloadExport = async (
+    url: string,
+    fileName: string,
+    mimeType: string,
+  ) => {
+    try {
+      addToast("Generating export... please wait.", "info");
+      const response = await api.get(url, { responseType: "blob" });
+      const blob = new Blob([response.data], { type: mimeType });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      addToast("Failed to generate export. Please try again.", "error");
+    }
+  };
+
   const handleExportPDF = () => {
-    addToast('Generating PDF Report... please wait.', 'info');
-    // Open in a new tab or trigger direct download
-    window.open('/api/v1/reports/export/pdf', '_blank');
+    downloadExport(
+      "/reports/export/pdf",
+      "AeroStock_Valuation_Report.pdf",
+      "application/pdf",
+    );
   };
 
   const handleExportExcel = () => {
-    addToast('Generating Excel Spreadsheet... please wait.', 'info');
-    window.open('/api/v1/reports/export/excel', '_blank');
+    downloadExport(
+      "/reports/export/excel",
+      "AeroStock_Valuation_Report.xlsx",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
   };
 
   if (isLoading) {
@@ -76,7 +103,9 @@ export default function Reports() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="gov-page-title">Audit & Analytical Reports</h1>
-          <p className="gov-page-subtitle">Export valuation sheets and audit system velocity metrics.</p>
+          <p className="gov-page-subtitle">
+            Export valuation sheets and audit system velocity metrics.
+          </p>
         </div>
         <div className="flex gap-2">
           <button
@@ -99,16 +128,26 @@ export default function Reports() {
         {/* Category Breakdown */}
         <div className="bg-aai-card border border-aai-border p-5 rounded">
           <h3 className="font-bold text-sm text-aai-foreground mb-3 flex items-center gap-2">
-            <FolderOpen className="h-4 w-4 text-aai-blue" /> Valuation by Category
+            <FolderOpen className="h-4 w-4 text-aai-blue" /> Valuation by
+            Category
           </h3>
           <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
             {valuationData?.categoryValuation.map((c: any, i: number) => (
-              <div key={i} className="p-3 bg-aai-surface/60 border border-aai-border rounded flex justify-between items-center text-xs">
+              <div
+                key={i}
+                className="p-3 bg-aai-surface/60 border border-aai-border rounded flex justify-between items-center text-xs"
+              >
                 <div>
-                  <span className="font-bold text-aai-foreground block">{c.name}</span>
-                  <span className="text-[10px] text-aai-muted mt-0.5 block">{c.count} items in stock</span>
+                  <span className="font-bold text-aai-foreground block">
+                    {c.name}
+                  </span>
+                  <span className="text-[10px] text-aai-muted mt-0.5 block">
+                    {c.count} items in stock
+                  </span>
                 </div>
-                <span className="font-semibold text-aai-foreground">₹{c.value.toLocaleString()}</span>
+                <span className="font-semibold text-aai-foreground">
+                  ₹{c.value.toLocaleString()}
+                </span>
               </div>
             ))}
           </div>
@@ -121,12 +160,21 @@ export default function Reports() {
           </h3>
           <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
             {valuationData?.warehouseValuation.map((w: any, i: number) => (
-              <div key={i} className="p-3 bg-aai-surface/60 border border-aai-border rounded flex justify-between items-center text-xs">
+              <div
+                key={i}
+                className="p-3 bg-aai-surface/60 border border-aai-border rounded flex justify-between items-center text-xs"
+              >
                 <div>
-                  <span className="font-bold text-aai-foreground block">{w.name}</span>
-                  <span className="text-[10px] text-aai-muted mt-0.5 block">Airport: {w.airport}</span>
+                  <span className="font-bold text-aai-foreground block">
+                    {w.name}
+                  </span>
+                  <span className="text-[10px] text-aai-muted mt-0.5 block">
+                    Airport: {w.airport}
+                  </span>
                 </div>
-                <span className="font-semibold text-aai-foreground">₹{w.value.toLocaleString()}</span>
+                <span className="font-semibold text-aai-foreground">
+                  ₹{w.value.toLocaleString()}
+                </span>
               </div>
             ))}
           </div>
@@ -135,7 +183,8 @@ export default function Reports() {
         {/* Velocity Indexes summary */}
         <div className="bg-aai-card border border-aai-border p-5 rounded">
           <h3 className="font-bold text-sm text-aai-foreground mb-3 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-aai-accent" /> Asset Velocity Index
+            <TrendingUp className="h-4 w-4 text-aai-accent" /> Asset Velocity
+            Index
           </h3>
           <div className="grid grid-cols-2 gap-4 h-56">
             {/* Fast moving */}
@@ -145,9 +194,16 @@ export default function Reports() {
               </span>
               <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 text-[10px] leading-tight">
                 {velocityData?.fastMoving.map((item: any) => (
-                  <div key={item.itemId} className="p-1.5 bg-aai-surface/60 border border-aai-border/40 rounded flex justify-between gap-1.5">
-                    <span className="font-semibold text-aai-foreground truncate">{item.name}</span>
-                    <span className="text-aai-success font-extrabold flex-shrink-0">+{item.totalIssued}</span>
+                  <div
+                    key={item.itemId}
+                    className="p-1.5 bg-aai-surface/60 border border-aai-border/40 rounded flex justify-between gap-1.5"
+                  >
+                    <span className="font-semibold text-aai-foreground truncate">
+                      {item.name}
+                    </span>
+                    <span className="text-aai-success font-extrabold flex-shrink-0">
+                      +{item.totalIssued}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -160,9 +216,16 @@ export default function Reports() {
               </span>
               <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 text-[10px] leading-tight">
                 {velocityData?.slowMoving.map((item: any) => (
-                  <div key={item.itemId} className="p-1.5 bg-aai-surface/60 border border-aai-border/40 rounded flex justify-between gap-1.5">
-                    <span className="font-semibold text-aai-foreground truncate">{item.name}</span>
-                    <span className="text-aai-error font-extrabold flex-shrink-0">{item.totalIssued}</span>
+                  <div
+                    key={item.itemId}
+                    className="p-1.5 bg-aai-surface/60 border border-aai-border/40 rounded flex justify-between gap-1.5"
+                  >
+                    <span className="font-semibold text-aai-foreground truncate">
+                      {item.name}
+                    </span>
+                    <span className="text-aai-error font-extrabold flex-shrink-0">
+                      {item.totalIssued}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -173,7 +236,9 @@ export default function Reports() {
 
       {/* Stock Valuation Detail Ledger Table */}
       <div className="bg-aai-card border border-aai-border rounded p-5">
-        <h3 className="font-bold text-sm text-aai-foreground mb-4">Stock Valuation Ledger Breakdown</h3>
+        <h3 className="font-bold text-sm text-aai-foreground mb-4">
+          Stock Valuation Ledger Breakdown
+        </h3>
         <div className="overflow-x-auto border border-aai-border rounded">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -190,13 +255,27 @@ export default function Reports() {
             <tbody className="divide-y divide-aai-border text-aai-light">
               {valuationData?.stockLevels.map((sl: any, idx: number) => (
                 <tr key={idx} className="hover:bg-aai-navy/10 transition-all">
-                  <td className="px-4 py-2.5 font-mono font-bold text-aai-blue tracking-wide">{sl.skuCode}</td>
-                  <td className="px-4 py-2.5 font-semibold text-aai-foreground">{sl.itemName}</td>
-                  <td className="px-4 py-2.5 text-aai-muted font-semibold">{sl.categoryName}</td>
-                  <td className="px-4 py-2.5 text-aai-muted">{sl.warehouseName} ({sl.airportCode})</td>
-                  <td className="px-4 py-2.5 text-center font-extrabold">{sl.quantity}</td>
-                  <td className="px-4 py-2.5 text-right font-bold">₹{sl.unitCost.toLocaleString()}</td>
-                  <td className="px-4 py-2.5 text-right font-semibold text-aai-foreground">₹{sl.totalValue.toLocaleString()}</td>
+                  <td className="px-4 py-2.5 font-mono font-bold text-aai-blue tracking-wide">
+                    {sl.skuCode}
+                  </td>
+                  <td className="px-4 py-2.5 font-semibold text-aai-foreground">
+                    {sl.itemName}
+                  </td>
+                  <td className="px-4 py-2.5 text-aai-muted font-semibold">
+                    {sl.categoryName}
+                  </td>
+                  <td className="px-4 py-2.5 text-aai-muted">
+                    {sl.warehouseName} ({sl.airportCode})
+                  </td>
+                  <td className="px-4 py-2.5 text-center font-extrabold">
+                    {sl.quantity}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-bold">
+                    ₹{sl.unitCost.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-semibold text-aai-foreground">
+                    ₹{sl.totalValue.toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>
