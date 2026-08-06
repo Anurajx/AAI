@@ -1,4 +1,4 @@
-# AeroStock — AAI Smart Inventory & Asset Management System
+# AeroStock, AAI Asset Management System
 
 AeroStock is a full-stack inventory, procurement, and audit platform tailored for the Airport Authority of India (AAI). It is designed to help airport operations teams manage spares, ground support equipment, safety gear, IT infrastructure, and consumables across multiple airports and warehouses with role-aware workflows, real-time stock visibility, and audit-friendly reporting.
 
@@ -173,14 +173,6 @@ CORS_ORIGINS="http://localhost:5173,http://localhost:3000"
 NODE_ENV="development"
 ```
 
-### Notes
-
-- `DATABASE_URL` must point to a working PostgreSQL instance.
-- `VITE_API_URL` is used by the frontend to target the backend during development.
-- For deployment, this should be updated to your hosted backend URL.
-
----
-
 ## 7. Local Development Setup
 
 ### Option A: Start with Dockerized PostgreSQL
@@ -240,7 +232,7 @@ The default URLs are:
 
 ---
 
-## 8. Available Root Scripts
+## 4. Available Root Scripts
 
 From the repository root:
 
@@ -259,47 +251,7 @@ npm run db:studio      # open Prisma Studio
 npm run db:setup       # start db, push schema, seed data
 ```
 
----
-
-## 9. Demo Credentials
-
-The seed script preloads the following users:
-
-| Role                     | Email                          | Password     | Scope  |
-| ------------------------ | ------------------------------ | ------------ | ------ |
-| Super Admin              | admin@aerostock.aai.aero       | Admin@1234   | Global |
-| Airport Manager (Delhi)  | delhi.mgr@aerostock.aai.aero   | Manager@1234 | DEL    |
-| Airport Manager (Mumbai) | mumbai.mgr@aerostock.aai.aero  | Manager@1234 | BOM    |
-| Staff (Delhi)            | delhi.staff@aerostock.aai.aero | Staff@1234   | DEL    |
-| Requester (Delhi)        | delhi.req@aerostock.aai.aero   | Req@1234     | DEL    |
-| Auditor                  | auditor@aerostock.aai.aero     | Auditor@1234 | Global |
-
-These accounts are intended for local testing and demos.
-
----
-
-## 10. Authentication and Security Model
-
-Authentication uses JWT access and refresh tokens.
-
-### Behavior
-
-- login returns access and refresh tokens
-- protected routes require the access token in the `Authorization` header
-- refresh logic is handled by the frontend API client and backend auth endpoints
-- passwords are stored as bcrypt hashes
-- roles determine which parts of the UI and API are accessible
-
-### Security Considerations
-
-- keep secrets in `.env` and never commit them
-- use strong production secrets for `JWT_SECRET` and `JWT_REFRESH_SECRET`
-- configure CORS properly for deployed hosts
-- avoid exposing database credentials in source control
-
----
-
-## 11. Database Model Summary
+## 5. Database Model Summary
 
 The Prisma schema models the following domain objects:
 
@@ -320,114 +272,3 @@ The Prisma schema models the following domain objects:
 - Notification
 
 This gives the system a relational foundation for inventory operations, warehouse movement, purchasing, approvals, and audits.
-
----
-
-## 12. Backend API Overview
-
-The backend exposes REST endpoints under `/api/v1`.
-
-### Authentication
-
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/refresh`
-- `POST /api/v1/auth/logout`
-- `GET /api/v1/auth/me`
-
-### Inventory
-
-- inventory listing and item management endpoints
-- stock adjustment and transfer endpoints
-- warehouse and supplier-related endpoints
-
-### Procurement
-
-- purchase order listing and creation
-- purchase order approval and receiving flows
-
-### Requisitions
-
-- requisition creation, approval, and fulfillment
-
-### Reports and Admin
-
-- valuation reports
-- reorder reports
-- admin management and audit log access
-- notification endpoints
-
-The server also exposes a health check at `/health`.
-
----
-
-## 13. Frontend Pages
-
-The client includes the following main UI areas:
-
-- Login
-- Dashboard
-- Inventory
-- Purchase Orders
-- Requisitions
-- Reports
-- Admin
-
-Each page uses the shared layout and talks to the backend through the centralized API client in [client/src/lib/api.ts](client/src/lib/api.ts).
-
----
-
-## 14. Deployment Notes
-
-The application is designed to be deployable in a standard cloud setup:
-
-- frontend hosted separately from backend
-- backend deployed behind a public HTTPS endpoint
-- PostgreSQL hosted externally (for example Render, Supabase, Neon, or a managed PostgreSQL service)
-- frontend environment variables updated to point to the deployed API URL
-
-For production deployments:
-
-- set `VITE_API_URL` to the deployed backend URL
-- set `CLIENT_URL` and `FRONTEND_URL` to the deployed frontend domain
-- set `CORS_ORIGINS` appropriately for the frontend host
-- ensure database credentials and secrets are set securely
-
----
-
-## 15. Troubleshooting
-
-### Database connection issues
-
-- confirm PostgreSQL is running
-- verify `DATABASE_URL`
-- run `npm run db:push`
-
-### Backend not starting
-
-- check that the port is free
-- verify `.env` values are loaded correctly
-- look at the server logs for Prisma or Express errors
-
-### Frontend not reaching backend
-
-- confirm `VITE_API_URL` points to the correct backend URL
-- ensure CORS allows the frontend origin
-- verify the backend is running and reachable
-
-### Missing demo data
-
-- run `npm run db:seed` again after confirming the database is reachable
-
----
-
-## 16. Summary
-
-AeroStock is a comprehensive airport inventory and procurement management system that combines:
-
-- multi-airport inventory tracking
-- procurement and requisition workflows
-- dashboard-based operational visibility
-- reporting and audit capabilities
-- secure role-based user access
-
-It is well-suited for airport operations teams that need reliable, auditable, and scalable inventory management.
